@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{BFC97DD9-A39C-420D-BDC7-A2DC0AD217A3}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OSPhilosophersProblem</RootNamespace>
+    <AssemblyName>OSPhilosophersProblem</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32428.217
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OSPhilosophersProblem", "OSPhilosophersProblem.csproj", "{BFC97DD9-A39C-420D-BDC7-A2DC0AD217A3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BFC97DD9-A39C-420D-BDC7-A2DC0AD217A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFC97DD9-A39C-420D-BDC7-A2DC0AD217A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFC97DD9-A39C-420D-BDC7-A2DC0AD217A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFC97DD9-A39C-420D-BDC7-A2DC0AD217A3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E6B8AC9B-F647-433F-A325-F501594AD6F7}
+	EndGlobalSection
+EndGlobal
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace OSPhilosophersProblem
+{
+    class ForkState
+    {
+        public bool taken { get; set; } = false;
+        public int ownerNumber { get; set; } = -1;
+        public bool leftNeighborRequest { get; set; } = false;
+        public bool rightNeighborRequest { get; set; } = false;
+        public byte leftNeighborPriority { get; set; } = 0;
+        public byte rightNeighborPriority { get; set; } = 0;
+    }
+
+    enum PhilosopherState
+    {
+        Hungry,
+        Think,
+        Eat
+    }
+
+    class Philosopher
+    {
+        public int Number { get; }
+        public PhilosopherState state { get; private set; }
+
+        public Philosopher(int num) => Number = num;
+        public void Eat()
+        {
+            state = PhilosopherState.Eat;
+            Console.WriteLine($"Philosopher {Number} is eating "); 
+            Random rnd = new Random();
+            Thread.Sleep(rnd.Next(3000, 5000));
+            state = PhilosopherState.Think;
+        }
+
+        public void Think()
+        {
+            state = PhilosopherState.Think;
+            Console.WriteLine($"Philosopher {Number} is thinking ");
+            Random rnd = new Random();
+            Thread.Sleep(rnd.Next(4000, 6000));
+            state = PhilosopherState.Hungry;
+        }
+    }
+
+    class PhilosophersTask 
+    {
+        ForkState[] forkStates = new ForkState[5];
+        Philosopher[] philosophers = new Philosopher[5];
+
+        public PhilosophersTask()
+        {
+            for(int i = 0; i<5; i++)
+            {
+                forkStates[i] = new ForkState();
+                philosophers[i] = new Philosopher(i);
+            }
+        }
+
+        public void ProcessPhilosopher(int num)
+        {
+            var philosopher = philosophers[num];
+            while (true)
+            {
+                if(philosopher.state == PhilosopherState.Think || philosopher.state == PhilosopherState.Eat)
+                {
+                    continue;
+                }
+                else
+                {
+                    if (num < 4)
+                    {
+                        if (forkStates[num].ownerNumber != num)
+                            TakeRightFork(num);
+                        if (forkStates[num].ownerNumber == num)
+                            TakeLeftFork(num);
+                    }
+                    else
+                    {
+                        if (forkStates[0].ownerNumber != 4)
+                            TakeLeftFork(4);
+                        if (forkStates[0].ownerNumber == 4)
+                            TakeRightFork(4);
+                    }
+
+                    if(forkStates[num].ownerNumber == num && forkStates[(num+1)%5].ownerNumber == num)
+                    {
+                        philosopher.Eat();
+                        PutLeftFork(num);
+                        PutRightFork(num);
+                        philosopher.Think();
+                    }
+                }
+            }
+        }
+
+        public void TakeRightFork(int philosopherNum)
+        {
+            var fork = forkStates[philosopherNum];
+            lock (fork)
+            {
+                if (fork.taken == false)
+                {
+                    if (fork.rightNeighborRequest == false)
+                    {
+                        fork.taken = true;
+                        fork.ownerNumber = philosopherNum;
+                    }
+                    else
+                    {
+                        if (fork.leftNeighborPriority >= fork.rightNeighborPriority)
+                        {
+                            fork.taken = true;
+                            fork.ownerNumber = philosopherNum;
+                        }
+                        else fork.leftNeighborRequest = true;
+                    }
+                }
+                else fork.leftNeighborRequest = true;
+            }
+        }
+
+        public void TakeLeftFork(int philosopherNum)
+        {
+            var fork = forkStates[(philosopherNum + 1)%5];
+            lock (fork)
+            {
+                if (fork.taken == false)
+                {
+                    if (fork.leftNeighborRequest == false)
+                    {
+                        fork.taken = true;
+                        fork.ownerNumber = philosopherNum;
+                    }
+                    else
+                    {
+                        if (fork.rightNeighborPriority >= fork.leftNeighborPriority)
+                        {
+                            fork.taken = true;
+                            fork.ownerNumber = philosopherNum;
+                        }
+                        else fork.rightNeighborRequest = true;
+                    }
+                }
+                else fork.rightNeighborRequest = true;
+            }
+        }
+
+        public void PutLeftFork(int philosopherNum)
+        {
+            var fork = forkStates[(philosopherNum + 1) % 5];
+            lock (fork)
+            {
+                fork.taken = false;
+                fork.ownerNumber = -1;
+                fork.rightNeighborRequest = false;
+                fork.rightNeighborPriority = 0;
+                fork.leftNeighborPriority = 1;
+            }
+        }
+        public void PutRightFork(int philosopherNum)
+        {
+            var fork = forkStates[philosopherNum];
+            lock (fork)
+            {
+                fork.taken = false;
+                fork.ownerNumber = -1;
+                fork.leftNeighborRequest = false;
+                fork.leftNeighborPriority = 0;
+                fork.rightNeighborPriority = 1;
+            }
+        }
+    }
+
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            PhilosophersTask philosophersTask = new PhilosophersTask();
+            Parallel.For(0, 5, philosophersTask.ProcessPhilosopher);
+        }
+    }
+}
+
+
+<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+    <startup> 
+        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.7.2" />
+    </startup>
+</configuration>
